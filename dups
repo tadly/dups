@@ -4,7 +4,7 @@
 #   a local target while only keeping a set amount of generations.
 #
 
-VERSION="0.0.1"
+VERSION="0.0.2"
 
 ## Must be resolvable by `date`
 ## prefix/suffix will be added later
