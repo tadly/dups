@@ -4,6 +4,8 @@
 #   a local target while only keeping a set amount of generations.
 #
 
+VERSION="0.0.1"
+
 ## Must be resolvable by `date`
 ## prefix/suffix will be added later
 BASE_NAME="%Y-%m-%d_%H:%M"
@@ -27,6 +29,7 @@ function usage() {
     printf "                    Set to 0 to keep infinite.\n"
     printf "                    Defaults to %s.\n" ${_keep}
     printf "  -y, --yes         Don't ask for confirmation.\n"
+    printf "  -v, --version     Print version and exit\n"
     printf "  -h, --help        Show this help text.\n"
     printf "\n"
     printf "Notes:\n"
@@ -55,6 +58,10 @@ function argparse() {
                 ;;
             "-h"|"--help")
                 usage
+                exit 0
+                ;;
+            "-v"|"--version")
+                echo "${VERSION}"
                 exit 0
                 ;;
             **)
@@ -95,14 +102,9 @@ function log() {
     echo -e "$@" >&2
 } 
 
-## at least two args (source, target) are required
-if [ "$#" -lt 2 ]; then
-    usage
-    exit 1
-fi
-
 ## do some argparsing
 argparse "$@"
+
 
 ## ask confirmation before starting backup
 if $_ask; then
