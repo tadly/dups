@@ -18,6 +18,8 @@ _suffix=""
 _keep=3
 _ask=true
 
+_install_target='/usr/bin/dups'
+
 function usage() {
     local script=`basename "$0"`
 
@@ -29,6 +31,8 @@ function usage() {
     printf "                    Set to 0 to keep infinite.\n"
     printf "                    Defaults to %s.\n" ${_keep}
     printf "  -y, --yes         Don't ask for confirmation.\n"
+    printf "  --install         Install to system (%s)\n" "${_install_target}"
+    printf "  --uninstall       Uninstall from system (%s)\n" "${_install_target}"
     printf "  -v, --version     Print version and exit\n"
     printf "  -h, --help        Show this help text.\n"
     printf "\n"
@@ -64,7 +68,21 @@ function argparse() {
                 echo "${VERSION}"
                 exit 0
                 ;;
+            "--install")
+                install
+                exit 0
+                ;;
+            "--uninstall")
+                uninstall
+                exit 0
+                ;;
             **)
+                ## at least two args (source, target) are required
+                if [ "$#" -lt 2 ]; then
+                    usage
+                    exit 1
+                fi
+
                 ## get all but last
                 _sources=("$@")
                 unset '_sources[-1]'
@@ -100,28 +118,75 @@ function argparse() {
 
 function log() {
     echo -e "$@" >&2
-} 
+}
+
+function install() {
+    ## check if target already exists
+    if [ -f "${_install_target}" ]; then
+        printf '"%s" already exists.\n' "${_install_target}"
+        read -p "Proceed and overwrite [y/N]? " -n 1 -r
+        printf "\n"
+
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            printf "Installation canceled.\n"
+            exit 0
+        fi
+    fi
+
+    sudo cp "$0" "${_install_target}"
+    if [ $? -eq 0 ]; then
+        printf "Installation successful!\n"
+    else
+        printf "Installation failed!\n"
+    fi
+}
+
+function uninstall() {
+    if [ ! -f "${_install_target}" ]; then
+        printf "Not installed, nothing to do!\n"
+        exit 0
+    fi
+
+    read -p "Remove \"${_install_target}\" from your system? [y/N]? " -n 1 -r
+    printf "\n"
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        printf "Uninstallation canceled.\n"
+        exit 0
+    fi
+
+    sudo rm "${_install_target}"
+    if [ $? -eq 0 ]; then
+        printf "Uninstallation successful!\n"
+    else
+        printf "Uninstallation failed!\n"
+    fi
+}
+
+function do_backup() {
+    ## ask confirmation before starting backup
+    if $_ask; then
+        read -p "Start backup [Y/n]? " -n 1 -r
+        REPLY="${REPLY:-y}"
+        printf "\n"
+
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 0
+        fi
+    fi
+
+    ## create backup
+    _target_file="${_target}/${_prefix}$(date +"${BASE_NAME}")${_suffix}.zip"
+    zip -r "${_target_file}" "${_sources[@]}"
+
+    ## delete old
+    if [ ${_keep} -gt 0 ]; then
+        ls -t "${_target}/${_prefix}"*"${_suffix}.zip" | awk "NR>${_keep}" | xargs -I {} rm -- {}
+    fi
+}
 
 ## do some argparsing
 argparse "$@"
 
-
-## ask confirmation before starting backup
-if $_ask; then
-    read -p "Start backup [Y/n]? " -n 1 -r                                                        
-    REPLY="${REPLY:-y}"
-    printf "\n"
-
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 0
-    fi
-fi
-
-## create backup
-_target_file="${_target}/${_prefix}$(date +"${BASE_NAME}")${_suffix}.zip"
-zip -r "${_target_file}" "${_sources[@]}"
-
-## delete old
-if [ ${_keep} -gt 0 ]; then
-    ls -t "${_target}/${_prefix}"*"${_suffix}.zip" | awk "NR>${_keep}" | xargs -I {} rm -- {}
-fi
+## do backup
+do_backup
