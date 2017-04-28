@@ -26,11 +26,12 @@ Notes:
 ```
 
 ## Installation
-Download [this](https://raw.githubusercontent.com/Tadly/dups/master/dups), put it somewhere for you to access and make sure it is executable.  
-...  
-...  
-What??? Oh, lazy are we? Hm... I see.
+### Manual
 ```sh
-curl https://raw.githubusercontent.com/Tadly/dups/master/dups -o dups
-chmod u+x dups
+git clone https://github.com/Tadly/dups
+./dups/dups --install
+rm -rf ./dups
+
+# To uninstall it again
+dups --uninstall
 ```
