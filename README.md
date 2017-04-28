@@ -14,6 +14,9 @@ Options:
                     Set to 0 to keep infinite.
                     Defaults to 3.
   -y, --yes         Don't ask for confirmation.
+  --install         Install to system (/usr/bin/dups)
+  --uninstall       Uninstall from system (/usr/bin/dups)
+  -v, --version     Print version and exit
   -h, --help        Show this help text.
 
 Notes:
